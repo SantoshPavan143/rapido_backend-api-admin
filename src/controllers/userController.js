@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Ride = require('../models/Ride');
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -161,10 +162,33 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+// @desc    Delete own account permanently
+// @route   DELETE /api/users/delete-account
+// @access  Private (user can delete their own account)
+const deleteOwnAccount = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    
+    // First, delete all user's rides
+    await Ride.deleteMany({ userId: userId });
+    
+    // Then delete the user account
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Account deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllUsers: getUsers,
   getUser,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  deleteOwnAccount
 };

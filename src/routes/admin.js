@@ -4,7 +4,8 @@ const {
   approveRide,
   rejectRide,
   getRideAnalytics,
-  getAdminActions
+  getAdminActions,
+  getRecentActivity
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -397,5 +398,63 @@ router.get('/analytics', getRideAnalytics);
  *         $ref: '#/components/responses/ForbiddenError'
  */
 router.get('/actions', getAdminActions);
+
+/**
+ * @swagger
+ * /api/admin/recent-activity:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get recent activity for dashboard
+ *     description: Retrieve recent activities including ride updates and admin actions
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *         description: Maximum number of activities to return
+ *     responses:
+ *       200:
+ *         description: Recent activity retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     activities:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           type:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                           icon:
+ *                             type: string
+ *                           timestamp:
+ *                             type: string
+ *                             format: date-time
+ *                           data:
+ *                             type: object
+ *                     total:
+ *                       type: integer
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ */
+router.get('/recent-activity', getRecentActivity);
 
 module.exports = router;

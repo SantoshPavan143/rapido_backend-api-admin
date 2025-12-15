@@ -4,7 +4,8 @@ const {
   getUserRides,
   getRide,
   updateRide,
-  cancelRide
+  cancelRide,
+  deleteRide
 } = require('../controllers/rideController');
 const { protect } = require('../middleware/auth');
 const { 
@@ -303,6 +304,10 @@ router
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  */
+
+// Permanent deletion route (separate from cancel)
+router.delete('/:id/permanent', validateIdParam, deleteRide);
+
 router
   .route('/:id')
   .get(validateIdParam, getRide)

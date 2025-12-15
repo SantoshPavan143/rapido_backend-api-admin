@@ -185,10 +185,49 @@ const cancelRide = async (req, res, next) => {
   }
 };
 
+const deleteRide = async (req, res, next) => {
+  try {
+    const ride = await Ride.findById(req.params.id);
+
+    if (!ride) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ride not found'
+      });
+    }
+
+    // Check if user owns the ride
+    if (ride.userId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    // Only allow deletion of cancelled rides
+    if (ride.status !== 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: 'Only cancelled rides can be deleted'
+      });
+    }
+
+    await Ride.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Ride deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createRide,
   getUserRides,
   getRide,
   updateRide,
-  cancelRide
+  cancelRide,
+  deleteRide
 };

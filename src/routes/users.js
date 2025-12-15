@@ -4,11 +4,15 @@ const {
   createUser,
   getUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  deleteOwnAccount
 } = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Route for users to delete their own account (no admin required)
+router.delete('/delete-account', protect, deleteOwnAccount);
 
 // All user management routes require admin authentication
 router.use(protect);

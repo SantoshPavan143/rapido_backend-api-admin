@@ -322,10 +322,147 @@ const getAdminActions = async (req, res, next) => {
   }
 };
 
+// @desc    Get recent activity for dashboard
+// @route   GET /api/admin/recent-activity
+// @access  Private/Admin
+const getRecentActivity = async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 10;
+    
+    // Get recent rides (status changes)
+    const recentRides = await Ride.find({
+      status: { $in: ['approved', 'rejected', 'completed', 'in-progress'] },
+      updatedAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+    })
+      .populate('userId', 'firstName lastName')
+      .populate('approvedBy', 'firstName lastName')
+      .populate('rejectedBy', 'firstName lastName')
+      .sort({ updatedAt: -1 })
+      .limit(limit);
+
+    // Get recent admin actions
+    const recentActions = await AdminAction.find({
+      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+    })
+      .populate('adminId', 'firstName lastName')
+      .sort({ createdAt: -1 })
+      .limit(limit);
+
+    // Transform rides into activity format
+    const rideActivities = recentRides.map(ride => {
+      let activityType = 'ride_update';
+      let description = '';
+      let icon = 'clock';
+
+      switch (ride.status) {
+        case 'approved':
+          activityType = 'ride_approved';
+          description = `${ride.userId?.firstName} ${ride.userId?.lastName}'s ride to ${ride.destination} was approved`;
+          icon = 'check-circle';
+          break;
+        case 'rejected':
+          activityType = 'ride_rejected';
+          description = `${ride.userId?.firstName} ${ride.userId?.lastName}'s ride to ${ride.destination} was rejected`;
+          icon = 'x-circle';
+          break;
+        case 'completed':
+          activityType = 'ride_completed';
+          description = `${ride.userId?.firstName} ${ride.userId?.lastName}'s ride to ${ride.destination} was completed`;
+          icon = 'check';
+          break;
+        case 'in-progress':
+          activityType = 'ride_started';
+          description = `${ride.userId?.firstName} ${ride.userId?.lastName}'s ride to ${ride.destination} has started`;
+          icon = 'truck';
+          break;
+        default:
+          description = `Ride status updated for ${ride.userId?.firstName} ${ride.userId?.lastName}`;
+      }
+
+      return {
+        id: ride._id,
+        type: activityType,
+        description,
+        icon,
+        timestamp: ride.updatedAt,
+        data: {
+          rideId: ride._id,
+          userId: ride.userId?._id,
+          userName: `${ride.userId?.firstName} ${ride.userId?.lastName}`,
+          destination: ride.destination,
+          status: ride.status
+        }
+      };
+    });
+
+    // Transform admin actions into activity format
+    const adminActivities = recentActions.map(action => {
+      let description = '';
+      let icon = 'user';
+
+      switch (action.action) {
+        case 'approve_ride':
+          description = `${action.adminId?.firstName} ${action.adminId?.lastName} approved a ride request`;
+          icon = 'check-circle';
+          break;
+        case 'reject_ride':
+          description = `${action.adminId?.firstName} ${action.adminId?.lastName} rejected a ride request`;
+          icon = 'x-circle';
+          break;
+        case 'create_user':
+          description = `${action.adminId?.firstName} ${action.adminId?.lastName} created a new user account`;
+          icon = 'user-plus';
+          break;
+        case 'update_user':
+          description = `${action.adminId?.firstName} ${action.adminId?.lastName} updated user information`;
+          icon = 'user';
+          break;
+        case 'delete_user':
+          description = `${action.adminId?.firstName} ${action.adminId?.lastName} deleted a user account`;
+          icon = 'user-minus';
+          break;
+        default:
+          description = `${action.adminId?.firstName} ${action.adminId?.lastName} performed an admin action`;
+      }
+
+      return {
+        id: action._id,
+        type: action.action,
+        description,
+        icon,
+        timestamp: action.createdAt,
+        data: {
+          adminId: action.adminId?._id,
+          adminName: `${action.adminId?.firstName} ${action.adminId?.lastName}`,
+          targetType: action.targetType,
+          targetId: action.targetId,
+          details: action.details
+        }
+      };
+    });
+
+    // Combine and sort all activities
+    const allActivities = [...rideActivities, ...adminActivities]
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, limit);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        activities: allActivities,
+        total: allActivities.length
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllRides,
   approveRide,
   rejectRide,
   getRideAnalytics,
-  getAdminActions
+  getAdminActions,
+  getRecentActivity
 };
