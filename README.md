@@ -338,6 +338,8 @@ For support and questions:
 ### v1.0.0 (Current)
 - ✅ Complete authentication system
 - ✅ Ride booking and management
+- ✅ Rapido Captain Confirmation
+- ✅ Minimum Ride ₹80/- Inr Confirmed
 - ✅ Admin dashboard
 - ✅ Swagger documentation
 - ✅ Input validation
