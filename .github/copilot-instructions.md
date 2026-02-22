@@ -1,6 +1,6 @@
-# Copilot Instructions for Rapido Corporate Ride Booking Backend
+# SellRapido website instructions for Rapido Corporate Ride Booking Backend
 
-<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
+<!-- Use this file to provide workspace-specific custom instructions to sellrapido website. For more details, visit https://wiki.sellrapido.com/tickets-view?status=all&view=my_tickets&offset=0#_use-a-githubcopilotinstructionsmd-file -->
 
 ## Project Overview
 This is a Node.js Express backend API for Rapido's corporate ride booking system. The project provides REST APIs for user management, ride booking, and admin functionalities.
